@@ -6,12 +6,13 @@
 //! Inline comments provide guidance for learning and documentation.
 
 // Deny warnings and unsafe code to simplify teaching and testing.
-#![deny(warnings)]
+// #![deny(warnings)]
 #![deny(unsafe_code)]
 // `no_main`: use the entry point provided by `cortex-m-rt`.
 #![no_main]
 // `no_std`: embedded environment without the standard library.
 #![no_std]
+
 
 // Import convenience traits for configuring pins and clocks.
 use hal::prelude::*;
@@ -19,6 +20,7 @@ use hal::prelude::*;
 use hal::stm32;
 // Alias the HAL crate for consistent usage in the code.
 use stm32g4xx_hal as hal;
+
 
 // `#[entry]` macro marks the program entry point.
 use cortex_m_rt::entry;
@@ -37,7 +39,6 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-
 // Application entry point.
 #[entry]
 fn main() -> ! {
@@ -50,28 +51,49 @@ fn main() -> ! {
     let mut rcc = dp.RCC.constrain();
     // Hardware initialization.
 
-    // Split GPIOA for pin configuration.
+    // Split GPIOA and GPIOC for pin configuration.
     let gpioa = dp.GPIOA.split(&mut rcc);
+    let gpioc = dp.GPIOC.split(&mut rcc);
 
     // Configure PA5 as push-pull output — LED pin on Nucleo boards.
     let mut led = gpioa.pa5.into_push_pull_output();
+    // Configure PC13 as input. No need to me mutable, we're only reading it.
+    let button = gpioc.pc13.into_floating_input();
+    
+    // Delay initial value
+    let mut delay_value = 100_000_u32;
 
+    // Initially, led is setted low
+    led.set_low().unwrap();
+    defmt::info!("All Set");
     // Main loop: toggle the LED with simple busy-wait delays.
     loop {
-        // Set LED low.
-        // rprintln!("Set LED Low");
-        for _ in 0..20_000 {
-            led.set_low().expect("set low gone wrong");
-        }
-        // info test
-        defmt::info!("LED was setted LOW");
-        // Set LED high.
-        // rprintln!("Set LED High");
-        for _ in 0..20_000 {
-            led.set_high().expect("set high gone wrong");
-        }
-        // using info just like you can use format!
-        defmt::info!("LED was setted HIGH? {}", led.is_set_high().unwrap());
+        // Call delay funcion and update delay variable once done
+        delay_value = loop_delay(delay_value, &button);
+        
+        // Toggle LED
+        defmt::info!("Toggle! Delay Value: {}", delay_value);
+        led.toggle().unwrap();
     }
 }
 
+// Delay Function
+fn loop_delay<P: InputPin>(mut delay_value: u32, button: &P) -> u32 {
+    let mut change_delay: u8 = 0;
+    // Loop for until value of del
+    for _i in 1..(delay_value) {
+        if button.is_high().unwrap_or(false) {
+            // Para mostrar o efeito do bouncing do botão no terminal
+            defmt::info!("Bounce!");
+            change_delay = 1;
+        }
+    }
+    if change_delay == 1 {
+        // If button pressed decrease the delay value
+        delay_value -= 25_000_u32;
+        if delay_value < 25_000_u32 {
+            delay_value = 100_000_u32;
+        }
+    }
+    delay_value
+}

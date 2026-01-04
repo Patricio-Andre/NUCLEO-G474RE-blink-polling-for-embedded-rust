@@ -1,17 +1,17 @@
-# blink_minimum — Nucleo G474RE
+# blink by button with polling — Nucleo G474RE
 
-This repository contains a minimal Rust example that blinks the LED on the
+This repository contains a Rust example that blinks the LED (PA5) when pressing user button (PC13) on the
 Nucleo G474RE board. The project is intended as a starting point for
 embedded Rust development on the STM32G4xx family. The repository includes a
-canonical project layout, `Cargo.toml`, `.cargo/config.toml`, a `Makefile`, and
+canonical project layout, `Cargo.toml`, `.cargo/config.toml`, and
 `memory.x` linker script — common components for embedded Rust projects.
 
 Main contents:
 - `src/main.rs` — embedded application (main loop toggling PA5).
-- `src/utils/` — utilities for the example (previously included logging helpers).
 - `memory.x` — linker script (Flash/RAM layout).
-- `Makefile` — convenient targets (`build`, `release`, `embed`, `flash`, `clippy`, ...).
-- `.cargo/config.toml` — build/target configuration.
+- `.cargo/config.toml` — Cargo build configuration (target, runner, flags).
+- `Embed.toml`— Configuration for `cargo-embed` (Chip selection, RTT, flashing behavior).
+- `STM32G474.svd` — System View Description file (essential for inspecting registers in VS Code).
 
 ## Quick overview
 
@@ -72,10 +72,6 @@ Release build (optimized):
 cargo build --release
 ```
 
-
-Using the `Makefile` is convenient but you should understand the underlying
-commands.
-
 ## Flash / Run on Nucleo G474RE
 
 If automatic detection fails, specify the chip explicitly:
@@ -104,7 +100,7 @@ guidelines that are helpful when adapting this example to other boards.
 
 ## Logging
 
-Uses defmt for logging, enabled via RTT by default. Read the documentation to use it properly: https://defmt.ferrous-systems.com/
+Uses defmt for logging, enabled via RTT by default. Read the documentation: https://defmt.ferrous-systems.com/
 
 ## VsCode Debugging Setup
 
@@ -112,3 +108,5 @@ This project includes a `.vscode/launch.json` file configured for debugging
 with the Cortex-Debug extension. Make sure to install the extension and adjust
 the `executable` path if necessary.
 
+## References
+This project structure and logic were inspired by the excellent examples from The Embedded Rustacean: [STM32F4 Embedded Rust at the HAL: GPIO Button Controlled Blinking](https://blog.theembeddedrustacean.com/stm32f4-embedded-rust-at-the-hal-gpio-button-controlled-blinking).
